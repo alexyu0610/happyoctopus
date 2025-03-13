@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated ASCII Rose</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000;
+            color: #f08080;
+            font-family: monospace;
+            overflow: hidden;
+        }
+        
+        #rose-container {
+            text-align: center;
+            white-space: pre;
+            font-size: 16px;
+            line-height: 1;
+            display: none; /* Initially hidden */
+        }
+        
+        #verification-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+        
+        #error-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+            color: #ff4500;
+            display: none; /* Initially hidden */
+        }
+        
+        h1, h2 {
+            color: #f08080;
+        }
+        
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .option-button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: #fff;
+            border: 2px solid #f08080;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option-button:hover {
+            background-color: #444;
+            transform: translateY(-3px);
+        }
+        
+        .try-again-button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #f08080;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f08080;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 600px) {
+            #rose-container {
+                font-size: 12px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .option-button {
+                width: 80%;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            #rose-container {
+                font-size: 10px;
+            }
+        }
+        
+        /* Fade transition */
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="verification-container">
+        <h1>Identity Verification</h1>
+        <h2>Find the spy :)</h2>
+        
+        <div class="button-container">
+            <button class="option-button" data-option="singing">Singing</button>
+            <button class="option-button" data-option="yoga">Yoga</button>
+            <button class="option-button" data-option="camping">Camping</button>
+            <button class="option-button" data-option="holding-cake">Holding white cake in public</button>
+            <button class="option-button" data-option="drawing">Drawing</button>
+        </div>
+    </div>
+    
+    <div id="error-container">
+        <h1>Incorrect Selection</h1>
+        <p>The option you selected is not correct. Please try again.</p>
+        <button class="try-again-button">Try Again</button>
+    </div>
+    
+    <div id="rose-container"></div>
+
+    <script>
+        // ASCII Rose frames for animation
+        const frames = [
+            `     _,--._.-,
+    /\\_r-,\\_ )
+ .-.) _;='_/ (.;
+  \\ \\'     \\/S )
+   L.'-. _.'|-'
+  <_\`-'\\'_.'/
+    \`'-._( \\
+     ___   \\\\,      ___
+     \\ .'-. \\\\   .-'_. /
+      '._' '.\\\\/.-'_.'
+         '--\`\`\\('--'
+               \\\\
+                \`\\\\,
+                  \\|`,
+            
+            `     _,--._.-,
+    /\\_r-,\\_ )
+ .-.) _;='_/ (.;
+  \\ \\'     \\/S )
+   L.'-. _.'|-'
+  <_\`-'\\'_.'/
+    \`'-._( \\
+     ___   \\\\,      ___
+     \\ .'-. \\\\   .-'_. /
+      '._' '.\\\\/.~'_.'
+         '--\`\`\\('--'
+               \\\\
+                \`\\\\,
+                  \\|`,
+                  
+            `     _,--._.-,
+    /\\_r-,\\_ )
+ .-.) _;='_/ (.;
+  \\ \\'     \\/S )
+   L.'~. _.'|-'
+  <_\`-'\\'_.'/
+    \`'-._( \\
+     ___   \\\\,      ___
+     \\ .'-. \\\\   .-'_. /
+      '._' '.\\\\/.-'_.'
+         '--\`\`\\('--'
+               \\\\
+                \`\\\\,
+                  \\|`
+        ];
+
+        // Colors for the rose animation
+        const colors = [
+            '#f08080', // Light coral
+            '#ff6347', // Tomato
+            '#ff4500', // OrangeRed
+            '#dc143c', // Crimson
+            '#ff69b4', // HotPink
+            '#ff1493', // DeepPink
+            '#c71585'  // MediumVioletRed
+        ];
+
+        // Confetti colors
+        const confettiColors = [
+            '#f08080', // Light coral
+            '#ff6347', // Tomato
+            '#ff4500', // OrangeRed
+            '#dc143c', // Crimson
+            '#ff69b4', // HotPink
+            '#ff1493', // DeepPink
+            '#c71585', // MediumVioletRed
+            '#ffff00', // Yellow
+            '#00ff00', // Green
+            '#00ffff', // Cyan
+            '#0000ff', // Blue
+            '#ff00ff'  // Magenta
+        ];
+
+        const verificationContainer = document.getElementById('verification-container');
+        const errorContainer = document.getElementById('error-container');
+        const roseContainer = document.getElementById('rose-container');
+        const optionButtons = document.querySelectorAll('.option-button');
+        const tryAgainButton = document.querySelector('.try-again-button');
+        
+        let frameIndex = 0;
+        let colorIndex = 0;
+        let animationInterval;
+        let sparkleInterval;
+        
+        // Add event listeners to option buttons
+        optionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const option = this.getAttribute('data-option');
+                
+                if (option === 'drawing') {
+                    // Correct option selected
+                    verificationContainer.classList.add('fade-out');
+                    setTimeout(() => {
+                        verificationContainer.style.display = 'none';
+                        roseContainer.style.display = 'block';
+                        roseContainer.classList.add('fade-in');
+                        
+                        // Start rose animation
+                        startRoseAnimation();
+                        
+                        // Create confetti effect
+                        createConfetti();
+                    }, 500);
+                } else {
+                    // Incorrect option selected
+                    verificationContainer.classList.add('fade-out');
+                    setTimeout(() => {
+                        verificationContainer.style.display = 'none';
+                        errorContainer.style.display = 'block';
+                        errorContainer.classList.add('fade-in');
+                    }, 500);
+                }
+            });
+        });
+        
+        // Add event listener to try again button
+        tryAgainButton.addEventListener('click', function() {
+            errorContainer.classList.add('fade-out');
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+                errorContainer.classList.remove('fade-out');
+                verificationContainer.style.display = 'block';
+                verificationContainer.classList.remove('fade-out');
+                verificationContainer.classList.add('fade-in');
+                
+                setTimeout(() => {
+                    verificationContainer.classList.remove('fade-in');
+                }, 500);
+            }, 500);
+        });
+        
+        // Function to animate the rose
+        function animateRose() {
+            // Update frame
+            roseContainer.textContent = frames[frameIndex];
+            roseContainer.style.color = colors[colorIndex];
+            
+            // Cycle through frames
+            frameIndex = (frameIndex + 1) % frames.length;
+            
+            // Cycle through colors more slowly
+            if (frameIndex === 0) {
+                colorIndex = (colorIndex + 1) % colors.length;
+            }
+            
+            // Add subtle pulsing effect
+            const scale = 1 + Math.sin(Date.now() / 1000) * 0.05;
+            roseContainer.style.transform = `scale(${scale})`;
+        }
+
+        // Add sparkle effect around the rose
+        function addSparkles() {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            
+            // Random position around the rose
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 50 + Math.random() * 100;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance;
+            
+            sparkle.style.cssText = `
+                position: absolute;
+                left: calc(50% + ${x}px);
+                top: calc(50% + ${y}px);
+                width: 2px;
+                height: 2px;
+                background-color: white;
+                border-radius: 50%;
+                opacity: ${Math.random()};
+                pointer-events: none;
+                animation: sparkle-fade 1.5s forwards;
+            `;
+            
+            document.body.appendChild(sparkle);
+            
+            // Remove sparkle after animation completes
+            setTimeout(() => {
+                document.body.removeChild(sparkle);
+            }, 1500);
+        }
+        
+        // Create confetti effect
+        function createConfetti() {
+            const confettiCount = 200;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // Random position, size, color, and shape
+                    const size = Math.random() * 10 + 5;
+                    const colorIndex = Math.floor(Math.random() * confettiColors.length);
+                    const shape = Math.random() > 0.5 ? '50%' : '0';
+                    const left = Math.random() * window.innerWidth;
+                    const top = -20;
+                    
+                    confetti.style.cssText = `
+                        position: absolute;
+                        left: ${left}px;
+                        top: ${top}px;
+                        width: ${size}px;
+                        height: ${size}px;
+                        background-color: ${confettiColors[colorIndex]};
+                        border-radius: ${shape};
+                        opacity: 1;
+                        pointer-events: none;
+                    `;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // Animate confetti falling
+                    const duration = Math.random() * 3 + 2;
+                    const rotation = Math.random() * 360;
+                    const xMovement = (Math.random() - 0.5) * 100;
+                    
+                    confetti.animate([
+                        { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                        { transform: `translate(${xMovement}px, ${window.innerHeight}px) rotate(${rotation}deg)`, opacity: 0 }
+                    ], {
+                        duration: duration * 1000,
+                        easing: 'cubic-bezier(0.1, 0.8, 0.3, 1)',
+                        fill: 'forwards'
+                    });
+                    
+                    // Remove confetti after animation
+                    setTimeout(() => {
+                        document.body.removeChild(confetti);
+                    }, duration * 1000);
+                }, Math.random() * 1000);
+            }
+        }
+
+        // Add CSS animation for sparkles
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            @keyframes sparkle-fade {
+                0% { transform: scale(0); opacity: 0; }
+                50% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(0); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+        // Start rose animation
+        function startRoseAnimation() {
+            // Initial render
+            animateRose();
+            
+            // Start animations
+            animationInterval = setInterval(animateRose, 500); // Update rose every 500ms
+            sparkleInterval = setInterval(addSparkles, 300); // Add sparkles every 300ms
+        }
+    </script>
+</body>
+</html>
